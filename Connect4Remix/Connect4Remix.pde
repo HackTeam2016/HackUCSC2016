@@ -1,19 +1,26 @@
 
 
-int w =7, h=9, player =1, bs;
+int w =7, h=9, player =1, bs, dir = 5, ypos=20;
+boolean done = false;
+float spring = .05;
+float gravity = 0.3;
+float friction = -0.6;
 int[][] board = new int[h][w];
 void setup(){
   background(#FFFFFF);
   size(displayWidth,displayHeight); ellipseMode(CORNER);
   bs = displayWidth /w;
+  orientation(PORTRAIT); //locks app in portrait mode
  
 }
 int nextSpace(int x){ //finds spot in col where the chip is going to go
   for(int y= h-1;y>=0;y--) if(board[y][x] ==0) return y;
   return -1;
 }
-void mousePressed(){
-  if(mouseX<pmouseY){ //shifting left
+/*void mouseDragged(){
+   if(mouseX<pmouseX){ //shifting left
+   background(0);
+  text("LEFT", 60, 60);
    for(int i =0;i<w;i++){
      for(int c=0; c<= w; c++){
           while(board[i][c] ==0){
@@ -23,11 +30,14 @@ void mousePressed(){
      }
   }
   player = player == 1?2:1;
-     return;
-   }
-  
-  
-  
+   } 
+}*/
+void mousePressed(){
+  if(done ==true){
+     player =1;  for( int y =0; y<h;y++) for(int x =0; x<w; x++){
+     board[y][x] = 0; }
+     done = false;
+  }
   
    //NOT SHIFITING
    int x = mouseX/bs;
@@ -46,20 +56,19 @@ void draw(){ //draws the board
           if(board[j][i]>0){ //red if 1, gre
               fill(board[j][i] == 1?255:0, board[j][i]== 2?2255:0, 0);
               //fill(#FF0505); //red piece 
-              ellipse(i*bs,j*bs, bs, bs);//crates circle
+              ellipse(i*bs,j*bs, bs, bs);//creates circle
+          //    ypos+= dir;
           }
       }
   }
 else{
-  textSize(225);
- background(0); 
- fill(255); text("Winner is player "+getWinner()+". Tap to restart", displayWidth/2, displayHeight/2);
- if(keyPressed){
-   player =1;
-   for( int y =0; y<h;y++) for(int x =0; x<w; x++){
-      board[y][x] = 0;
-   }
- }
+  textSize(100);
+ background(0, 500); 
+ 
+   fill(255); text("Winner is player "+getWinner()+"\n    Tap to restart", 200, 500);
+   done = true;
+ 
+
 }
 }
 
