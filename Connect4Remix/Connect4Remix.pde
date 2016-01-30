@@ -6,6 +6,22 @@ float spring = .05;
 float gravity = 0.3;
 float friction = -0.6;
 int[][] board = new int[h][w];
+//---stuff for score keeping --------------
+int score1 =0;
+int score2 =0;
+int count =0;
+//----------------------------------------
+//---Defining specific text and rectangles------
+void rectt(float x,float y,float w, float h, float r, color c){
+ fill(c);
+ rect(x,y,w,h,r);
+}
+
+//text: x position, y position, text box width, text box height
+void textt(String t, float x, float y, float w, float h, color c, float s, int align){
+   fill(c); textAlign(align); textSize(s); text(t,x,y,w,h);
+}
+//-------------------------------------------------
 void setup(){
   background(#FFFFFF);
   size(displayWidth,displayHeight); ellipseMode(CORNER);
@@ -37,6 +53,7 @@ void mousePressed(){
      player =1;  for( int y =0; y<h;y++) for(int x =0; x<w; x++){
      board[y][x] = 0; }
      done = false;
+     count =0; //resets count
   }
   
    //NOT SHIFITING
@@ -55,20 +72,20 @@ void draw(){ //draws the board
           rect(i*bs,j*bs,bs,bs);
           if(board[j][i]>0){ //red if 1, gre
               fill(board[j][i] == 1?255:0, board[j][i]== 2?2255:0, 0);
-              //fill(#FF0505); //red piece 
-              ellipse(i*bs,j*bs, bs, bs);//creates circle
-          //    ypos+= dir;
+              ellipse(i*bs,j*bs, bs, bs);//creates circle at desired location
           }
       }
   }
 else{
-  textSize(100);
- background(0, 500); 
- 
-   fill(255); text("Winner is player "+getWinner()+"\n    Tap to restart", 200, 500);
+  rectt(0,0,displayWidth, displayHeight,0, color(255,100)); //transparent rectangle
    done = true;
- 
-
+   //----SCORE STUFF ---------------------------------------------------------
+  if(count==0 && getWinner() ==1) {score1++; count++;}
+ else if(count==0&&getWinner() ==2) {score2++; count++;}
+   textt("Winner is player "+getWinner()+"\n    Tap to restart", bs, 700, 500, 50, color(0),100,CENTER);
+   textt("Player 1 score: "+score1+"\n", bs, bs*(h+2),900,700,color(0), 90,LEFT);
+   textt("Player 2 score: "+score2+"\n", bs, bs*(h+3),900,700,color(0), 90,LEFT);
+//------------------------------------------------------------------------------
 }
 }
 
