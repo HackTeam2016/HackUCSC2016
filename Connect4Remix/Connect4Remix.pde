@@ -1,17 +1,21 @@
 
-
-int w =7, h=9, player =1, bs, dir = 5, ypos=20;
+int w =7, h=7, player =1, bs, dir = 5, ypos=20;
 boolean done = false;
-float spring = .05;
-float gravity = 0.3;
-float friction = -0.6;
 int[][] board = new int[h][w];
-//---stuff for score keeping --------------
 int score1 =0;
 int score2 =0;
 int count =0;
-//----------------------------------------
-//---Defining specific text and rectangles------
+int dx=0;
+int dy=0;
+void setup(){
+  background(#FFFFFF);
+  size(600,600); ellipseMode(CORNER);
+  //size(displayWidth,displayHeight); ellipseMode(CORNER);
+  //ANDROID bs = displayWidth /w;
+  //ANDROID orientation(PORTRAIT); //locks app in portrait mode
+   bs = 600/w;
+ 
+}
 void rectt(float x,float y,float w, float h, float r, color c){
  fill(c);
  rect(x,y,w,h,r);
@@ -20,14 +24,6 @@ void rectt(float x,float y,float w, float h, float r, color c){
 //text: x position, y position, text box width, text box height
 void textt(String t, float x, float y, float w, float h, color c, float s, int align){
    fill(c); textAlign(align); textSize(s); text(t,x,y,w,h);
-}
-//-------------------------------------------------
-void setup(){
-  background(#FFFFFF);
-  size(displayWidth,displayHeight); ellipseMode(CORNER);
-  bs = displayWidth /w;
-  orientation(PORTRAIT); //locks app in portrait mode
- 
 }
 int nextSpace(int x){ //finds spot in col where the chip is going to go
   for(int y= h-1;y>=0;y--) if(board[y][x] ==0) return y;
@@ -53,7 +49,7 @@ void mousePressed(){
      player =1;  for( int y =0; y<h;y++) for(int x =0; x<w; x++){
      board[y][x] = 0; }
      done = false;
-     count =0; //resets count
+     count =0;
   }
   
    //NOT SHIFITING
@@ -61,9 +57,37 @@ void mousePressed(){
    int y=nextSpace(x);
    if(y>=0){
      board[y][x] = player;
-     player = player == 1?2:1; //alternates players
+     player = player == 1?2:1; //alternates players in basic connect 4 game
    }
   
+}
+void drawboard(){
+  if( getWinner() ==0){
+      for(int j=0; j<h;j++) for(int i =0;i<w;i++){
+          fill(#FFFFFF); //BACKGROUND COLOR
+          rect(i*bs,j*bs,bs,bs);
+          if(board[j][i]>0){ //red if 1, gre
+              fill(board[j][i] == 1?255:0, board[j][i]== 2?2255:0, 0);
+              //fill(#FF0505); //red piece 
+              //ellipse(i*bs,j*bs, bs, bs);//creates circle
+              //player = player == 1?2:1; //alternates players
+          //    ypos+= dir;
+          }
+      }
+  }
+else{
+  
+ //ANDROID: rectt(0,0,displayWidth, displayHeight,0, color(255,100)); //transparent rectangle
+  rectt(0,0,600, 600,0, color(255,100));
+ if(count==0 && getWinner() ==1) {score1++; count++;}
+ else if(count==0&&getWinner() ==2) {score2++; count++;}
+   textt("Winner is player "+getWinner()+"\n    Tap to restart", bs, 700, 500, 50, color(0),100,CENTER);
+   textt("Player 1 score: "+score1+"\n", bs, bs*(h+2),900,700,color(0), 90,LEFT);
+   textt("Player 2 score: "+score2+"\n", bs, bs*(h+3),900,700,color(0), 90,LEFT);
+   done = true;
+ 
+
+}
 }
 void draw(){ //draws the board
   if( getWinner() ==0){
@@ -72,23 +96,82 @@ void draw(){ //draws the board
           rect(i*bs,j*bs,bs,bs);
           if(board[j][i]>0){ //red if 1, gre
               fill(board[j][i] == 1?255:0, board[j][i]== 2?2255:0, 0);
-              ellipse(i*bs,j*bs, bs, bs);//creates circle at desired location
+              //fill(#FF0505); //red piece 
+              ellipse(i*bs,j*bs, bs, bs);//creates circle
+          //    ypos+= dir;
           }
       }
   }
 else{
-  rectt(0,0,displayWidth, displayHeight,0, color(255,100)); //transparent rectangle
-   done = true;
-   //----SCORE STUFF ---------------------------------------------------------
-  if(count==0 && getWinner() ==1) {score1++; count++;}
+  
+ //ANDROID: rectt(0,0,displayWidth, displayHeight,0, color(255,100)); //transparent rectangle
+  rectt(0,0,600, 600,0, color(255,100));
+ if(count==0 && getWinner() ==1) {score1++; count++;}
  else if(count==0&&getWinner() ==2) {score2++; count++;}
    textt("Winner is player "+getWinner()+"\n    Tap to restart", bs, 700, 500, 50, color(0),100,CENTER);
    textt("Player 1 score: "+score1+"\n", bs, bs*(h+2),900,700,color(0), 90,LEFT);
    textt("Player 2 score: "+score2+"\n", bs, bs*(h+3),900,700,color(0), 90,LEFT);
-//------------------------------------------------------------------------------
-}
-}
+   done = true;
+ 
 
+}
+}
+void keyPressed(){
+  player = player == 1?2:1; //alternates players
+  int kC= keyCode, dy= kC==LEFT?-1:(kC==RIGHT?1:0), dx=kC==DOWN?-1:(kC==UP?1:0);
+  int [][]newboard = shift(dy, dx);
+  if(newboard!=null){
+     board = newboard; 
+     drawboard();
+    //player = player == 1?2:1; //alternates players
+     //if(kC ==RIGHT) player = player == 1?2:1; //alternates players
+     
+  }
+}
+//--2048 SHIFTING---------------------------------------------------------------------------------
+int [][] shift(int dx, int dy){
+ int [][] back= new int [h][w]; 
+ //----Make a copy of board-----------
+ for(int  j=0;j<h;j++){
+   for(int i=0;i<w;i++){
+    back[j][i] = board[j][i]; 
+   }
+ }
+ //---------------------------
+  boolean moved = false;
+  
+  if(dx!=0 || dy!=0){
+     int d = dx !=0? dx: dy; 
+     for(int perp =0; perp<board.length;perp++){ //direction perp. where your mvoing
+         for(int tang = (d>0?board.length-2:1); tang !=(d>0 ?-1:board.length); tang-=d){  //if moving right, start at end of array
+              int y = dx!= 0? perp:tang, x=dx !=0? tang:perp, ty = y, tx =x;
+              if( back[y][x]==0) continue;//if there is a blank space.... continue
+              for(int i=(dx!=0?x:y)+d;i !=(d>0? board.length:-1);i+=d){ //slide the block
+                   int r = dx!= 0?y:i, c=dx !=0? i:x;
+                   if(back[r][c] !=0) break; //if you hit a point of where to stop, stop
+                   if(dx!=0) tx =i;
+                   else ty=y;
+              }
+              
+              //x and y are the block position. tx and ty is where the block is sliding (target x, target y)
+              if((dx!=0&& tx!=x)||(dy!=0&& ty!= y)){ //now we move the block if ti is empty
+               back[ty][tx]= back[y][x];
+               back[y][x] = 0;
+               moved = true;
+              }
+              if(moved == true){
+                board[y][x] = 0;
+                 if(player ==1) score1++;
+                 if(player ==2) score2++;
+              }
+         }
+       
+     }
+     
+  }
+  //player = player == 1?2:1; //alternates players
+  return moved? back : null;
+}
 int p(int y, int x){//makes sure 4 in a row is not off the board
    return (y<0|| x<0|| y>=h || x>= w)?0:board[y][x]; //return 0 if off the board, or location on board
 }
