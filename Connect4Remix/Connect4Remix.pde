@@ -1,5 +1,26 @@
-
-int w =7, h=7, player =1, bs, dir = 5, ypos=20;
+Gestures g;      // create a gesture object
+import android.view.MotionEvent;
+/*
+* This is a game called Connect Remix. This game is an android app
+* that takes a twist on the familiar game Connect 4.
+* The game combines aspects of 2048 with Connect 4, alowing players
+* the ability to shift all the coins left, right, and up. 
+* 
+* IMPORTANT:
+*        1. shift up- when you shift up, coins do go up, but then
+*           the board is shifted clockwise, to flip the board over
+*           to continue the Connect 4 style Gameplay
+*        2. ALPHA BUILD - This build is not meant for regular use
+*           This game is a 2 player game, no AI has been made yet
+*        3. Coins that are the same color do not "combine" as they
+*            would in 2048... Maybe in a future build
+*         4. If you are good with AI, please message me!
+*
+* @author: Ramzey Ghanaim
+* @verion: 0.0.1
+*
+*/
+int w =7, h=7, player =1, bs, dir = 5, ypos=20, curx, cury;
 boolean done = false;
 int[][] board = new int[h][w];
 int score1 =0;
@@ -7,14 +28,19 @@ int score2 =0;
 int count =0;
 int dx=0;
 int dy=0;
+boolean swype = false;
 void setup(){
-  background(#FFFFFF);
-  size(600,600); ellipseMode(CORNER);
-  //size(displayWidth,displayHeight); ellipseMode(CORNER);
-  //ANDROID bs = displayWidth /w;
-  //ANDROID orientation(PORTRAIT); //locks app in portrait mode
-   bs = 600/w;
- 
+  background(#9D9D9D);
+  //size(600,600); ellipseMode(CORNER);
+  size(displayWidth,displayHeight); ellipseMode(CORNER);
+  bs = displayWidth /w;
+ orientation(PORTRAIT); //locks app in portrait mode
+  // bs = 600/w;
+ g=new Gestures(500,500,this); 
+ g.setSwipeUp("swipeUp");    // attach the function called swipeUp to the gesture of swiping upwards
+  g.setSwipeDown("swipeDown");    // attach the function called swipeDown to the gesture of swiping downwards
+  g.setSwipeLeft("swipeLeft");  // attach the function called swipeLeft to the gesture of swiping left
+  g.setSwipeRight("swipeRight");  // attach the function called swipeRight to the gesture of swiping right
 }
 void rectt(float x,float y,float w, float h, float r, color c){
  fill(c);
@@ -29,42 +55,12 @@ int nextSpace(int x){ //finds spot in col where the chip is going to go
   for(int y= h-1;y>=0;y--) if(board[y][x] ==0) return y;
   return -1;
 }
-/*void mouseDragged(){
-   if(mouseX<pmouseX){ //shifting left
-   background(0);
-  text("LEFT", 60, 60);
-   for(int i =0;i<w;i++){
-     for(int c=0; c<= w; c++){
-          while(board[i][c] ==0){
-            board[i][c]=board[i][c+1];
-            board[i][c+1]=0;
-     }
-     }
-  }
-  player = player == 1?2:1;
-   } 
-}*/
-void mousePressed(){
-  if(done ==true){
-     player =1;  for( int y =0; y<h;y++) for(int x =0; x<w; x++){
-     board[y][x] = 0; }
-     done = false;
-     count =0;
-  }
-  
-   //NOT SHIFITING
-   int x = mouseX/bs;
-   int y=nextSpace(x);
-   if(y>=0){
-     board[y][x] = player;
-     player = player == 1?2:1; //alternates players in basic connect 4 game
-   }
-  
-}
+
+
 void drawboard(){
   if( getWinner() ==0){
       for(int j=0; j<h;j++) for(int i =0;i<w;i++){
-          fill(#FFFFFF); //BACKGROUND COLOR
+          fill(#9D9D9D); //BACKGROUND COLOR
           rect(i*bs,j*bs,bs,bs);
           if(board[j][i]>0){ //red if 1, gre
               fill(board[j][i] == 1?255:0, board[j][i]== 2?2255:0, 0);
@@ -77,8 +73,8 @@ void drawboard(){
   }
 else{
   
- //ANDROID: rectt(0,0,displayWidth, displayHeight,0, color(255,100)); //transparent rectangle
-  rectt(0,0,600, 600,0, color(255,100));
+   rectt(0,0,displayWidth, displayHeight,0, color(255,100)); //transparent rectangle
+  //rectt(0,0,600, 600,0, color(255,100));
  if(count==0 && getWinner() ==1) {score1++; count++;}
  else if(count==0&&getWinner() ==2) {score2++; count++;}
    textt("Winner is player "+getWinner()+"\n    Tap to restart", bs, 700, 500, 50, color(0),100,CENTER);
@@ -90,7 +86,8 @@ else{
 }
 }
 void draw(){ //draws the board
-  if( getWinner() ==0){
+  if( getWinner() ==0 ){
+    if(swype ==false){
       for(int j=0; j<h;j++) for(int i =0;i<w;i++){
           fill(#FFFFFF); //BACKGROUND COLOR
           rect(i*bs,j*bs,bs,bs);
@@ -101,11 +98,12 @@ void draw(){ //draws the board
           //    ypos+= dir;
           }
       }
+    }//swype if
   }
 else{
-  
- //ANDROID: rectt(0,0,displayWidth, displayHeight,0, color(255,100)); //transparent rectangle
-  rectt(0,0,600, 600,0, color(255,100));
+  swype = false;
+ rectt(0,0,displayWidth, displayHeight,0, color(255,100)); //transparent rectangle
+  //rectt(0,0,600, 600,0, color(255,100));
  if(count==0 && getWinner() ==1) {score1++; count++;}
  else if(count==0&&getWinner() ==2) {score2++; count++;}
    textt("Winner is player "+getWinner()+"\n    Tap to restart", bs, 700, 500, 50, color(0),100,CENTER);
@@ -116,13 +114,14 @@ else{
 
 }
 }
-void keyPressed(){
-  player = player == 1?2:1; //alternates players
+void keyPressed(int key){
+   // keyCode = key;
   int kC= keyCode, dy= kC==LEFT?-1:(kC==RIGHT?1:0), dx=kC==DOWN?-1:(kC==UP?1:0);
   int [][]newboard = shift(dy, dx);
   if(newboard!=null){
      board = newboard; 
      drawboard();
+     player = player == 1?2:1; //alternates players
     //player = player == 1?2:1; //alternates players
      //if(kC ==RIGHT) player = player == 1?2:1; //alternates players
      
@@ -132,7 +131,7 @@ void keyPressed(){
 int [][] shift(int dx, int dy){
  int [][] back= new int [h][w]; 
  //----Make a copy of board-----------
- for(int  j=0;j<h;j++){
+ for(int  j=0;j<board.length;j++){
    for(int i=0;i<w;i++){
     back[j][i] = board[j][i]; 
    }
@@ -141,16 +140,17 @@ int [][] shift(int dx, int dy){
   boolean moved = false;
   
   if(dx!=0 || dy!=0){
-     int d = dx !=0? dx: dy; 
+    println("non zero dx, dy");
+     int d = dx !=0 ? dx: dy; 
      for(int perp =0; perp<board.length;perp++){ //direction perp. where your mvoing
-         for(int tang = (d>0?board.length-2:1); tang !=(d>0 ?-1:board.length); tang-=d){  //if moving right, start at end of array
-              int y = dx!= 0? perp:tang, x=dx !=0? tang:perp, ty = y, tx =x;
+         for(int tang = (d>0 ? board.length-2:1); tang !=(d > 0 ? -1:board.length); tang -=d){  //if moving right, start at end of array, otherwise, beginning
+              int y = dx != 0 ? perp : tang, x=dx !=0? tang:perp, ty = y, tx =x;
               if( back[y][x]==0) continue;//if there is a blank space.... continue
-              for(int i=(dx!=0?x:y)+d;i !=(d>0? board.length:-1);i+=d){ //slide the block
-                   int r = dx!= 0?y:i, c=dx !=0? i:x;
+              for(int i=(dx!=0 ? x : y)+d; i!=(d>0? board.length : -1);i+=d){ //slide the block
+                   int r = dx!= 0 ? y:i, c=dx !=0? i:x; //row and col depend on which direction we are moving in
                    if(back[r][c] !=0) break; //if you hit a point of where to stop, stop
                    if(dx!=0) tx =i;
-                   else ty=y;
+                   else ty=i;
               }
               
               //x and y are the block position. tx and ty is where the block is sliding (target x, target y)
@@ -161,8 +161,7 @@ int [][] shift(int dx, int dy){
               }
               if(moved == true){
                 board[y][x] = 0;
-                 if(player ==1) score1++;
-                 if(player ==2) score2++;
+                 
               }
          }
        
@@ -192,5 +191,111 @@ for(int y=0; y<h;y++) for(int x=0;x<w;x++)
 for( int y =0; y<h;y++) for(int x =0; x<w; x++) if(p(x,y) ==0) return 0;
   
   return -1; //tie
+}
+//----ANDROID SWIPING STUFF ---------------------------------------------------------------------------------------------------------------
+// android touch event. 
+public boolean surfaceTouchEvent(MotionEvent event) {
+ // check what that was  triggered  
+  switch(event.getAction()) {
+  case MotionEvent.ACTION_DOWN:    // ACTION_DOWN means we put our finger down on the screen 
+    g.setStartPos(new PVector(event.getX(), event.getY()));    // set our start position
+    break;
+  case MotionEvent.ACTION_UP:    // ACTION_UP means we pulled our finger away from the screen  
+    g.setEndPos(new PVector(event.getX(), event.getY()));    // set our end position of the gesture and calculate if it was a valid one
+    break;
+  }
+  return super.surfaceTouchEvent(event);
+}
+// function that is called when we are swiping upwards
+void swipeUp() {
+ // player = player == 1?2:1; //alternates players
+ board[cury][curx] =0;
+  dx = -1;
+  int [][]newboard = shift(dy, dx);
+  if(newboard!=null){
+     board = newboard; 
+    
+     drawboard();
+      board = rotate(board);
+      drawboard();
+      board = rotate(board);
+      drawboard();
+
+  }
+  dx=0; 
+  println("Swype up");
+  //rotate board
   
+}
+//swyping down should never need to occur
+void swipeDown() {
+  /*board[cury][curx] =0;
+  dx = 1;
+  int [][]newboard = shift(dy, dx);
+  if(newboard!=null){
+     board = newboard; 
+     drawboard();
+
+  }
+  dx=0; 
+  println("a swipe down");
+  */
+ 
+}
+void swipeLeft() {
+  board[cury][curx] =0;
+  //player = player == 1?2:1; //alternates players
+  dy = -1;
+  int [][]newboard = shift(dy, dx);
+  if(newboard!=null){
+    println("gothere");
+     board = newboard; 
+     drawboard();
+  }
+  dy=0;
+  swype = false;
+  println("a swipe left");
+ 
+}
+void swipeRight() {
+  board[cury][curx] =0;
+  dy=1;
+  int [][] newboard = shift(dy,dx);
+  if(newboard!= null){
+       board = newboard;
+       drawboard();
+  }
+  dy=0;
+  println("a swipe right");
+}
+void mousePressed(){
+  if(done ==true){
+     player =1;  for( int y =0; y<h;y++) for(int x =0; x<w; x++){
+     board[y][x] = 0; }
+     
+     count =0;
+  }
+  if(done != true && pmouseX-mouseX==0){
+   //NOT SHIFITING
+   int x = mouseX/bs;
+   int y=nextSpace(x);
+   curx = x;
+   cury=y;
+   if(y>=0){
+     board[y][x] = player;
+     player = player == 1?2:1; //alternates players in basic connect 4 game
+   }
+  }
+  done = false;
+}
+static int[][] rotate(int[][] mat) {
+    final int M = mat.length;
+    final int N = mat[0].length;
+    int[][] ret = new int[N][M];
+    for (int r = 0; r < M; r++) {
+        for (int c = 0; c < N; c++) {
+            ret[c][M-1-r] = mat[r][c];
+        }
+    }
+    return ret;
 }
